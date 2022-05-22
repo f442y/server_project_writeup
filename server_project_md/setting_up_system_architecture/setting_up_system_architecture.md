@@ -1,0 +1,237 @@
+## Setting Up System Architecture
+
+<!-- Objective: Server node(s) with:
+ * WireGuard VPN installed
+ * VPN server running on manager (node with NFS share)
+ * Worker nodes VPN clients connected to VPN server
+ * NFS server running on manager node, sharing over VPN server
+ * Worker nodes able to connect to NFS share through VPN
+ * Docker installed on all nodes
+ * All nodes in docker swarm (*optional: within VPN)
+ * Portainer stack deployed to swarm
+ *  -->
+
+<!-- TOC:start -->
+
+- [Setting Up System Architecture](#setting-up-system-architecture)
+  - [VPN (WireGuard)](#vpn-wireguard)
+    - [Install WireGuard](#install-wireguard)
+    - [Choosing VPN IP address range](#choosing-vpn-ip-address-range)
+    - [Setup WireGuard VPN server](#setup-wireguard-vpn-server)
+      - [Generating a key pair](#generating-a-key-pair)
+      - [Configuring the WireGuard server](#configuring-the-wireguard-server)
+      - [Starting up the WireGuard server](#starting-up-the-wireguard-server)
+    - [Setup WireGuard VPN client](#setup-wireguard-vpn-client)
+      - [Generating a key pair](#generating-a-key-pair-1)
+      - [Configuring the WireGuard client(s)](#configuring-the-wireguard-clients)
+      - [Starting up the WireGuard client(s)](#starting-up-the-wireguard-clients)
+    - [Testing the VPN connection](#testing-the-vpn-connection)
+  - [NFS](#nfs)
+    - [Install NFS](#install-nfs)
+    - [Configure NFS Server](#configure-nfs-server)
+    - [Test mount NFS share](#test-mount-nfs-share)
+  - [Docker](#docker)
+    - [Install Docker](#install-docker)
+    - [Create Docker Swarm](#create-docker-swarm)
+    - [Deploy Portainer Across Docker Swarm](#deploy-portainer-across-docker-swarm)
+
+<!-- TOC:end -->
+
+### VPN (WireGuard)
+
+I will be running a WireGuard Server on the manager server node of my cluster, this server will be used exclusively by the server nodes to share data.   
+
+The VPN will not be used to tunnel all data to the local network or the internet, the nodes will be able to connect to the internet to update and download docker images.
+
+The VPN (Virtual Private Network) will encrypt all the data that is shared across the server nodes and provide a degree of separation from the rest of the local network.   
+
+There are two main VPN protocols, OpenVPN and WireGuard, both are considered secure and reliable, OpenVPN being the more mature and more widely available.   
+As WireGuard is very performant on the linux kernel, this makes it an excellent choice as the performance overhead will be minimized.    
+
+It is recommended to have a Static IP address on all devices that will be a part of the VPN.   
+
+#### Install WireGuard
+
+Installing WireGuard should be same on both the Raspberry Pi (Debian) and Orange Pi (Ubuntu).   
+
+To install WireGuard, run:
+```
+sudo apt install WireGuard
+```
+WireGuard must be installed on all the server nodes.
+
+#### Choosing VPN IP address range
+
+Devices within the VPN, will have a separate network interface to connect with each other, this separate network interface will have it's own IP address.   
+This IP address will not be exposed to the rest of the local network, it will only be used to connect to server nodes within the VPN.   
+
+The block of IP addresses can be within the range below:
+
+```
+10.0.0.0     to    10.255.255.255   
+172.16.0.0   to    172.31.255.255   
+192.168.0.0  to    192.168.255.255   
+```
+
+I will be using the block of addresses in the `10.10.10.0/24` range, this is `10.10.10.0` to `10.10.10.254`.   
+
+#### Setup WireGuard VPN server 
+
+Now that WireGuard has been installed and we have chosen an IP address range, the WireGuard server can be configured and set up.
+The WireGuard server will be the central node that all the other nodes communicate with.   
+To only permit specific nodes to connect to the server and securely communicate over the WireGuard interface, we must generate a key pair.   
+A key pair is a public and private key, this allows data to be encrypted by any node with the public key but only decrypted by nodes with the private key.   
+The server will have its own private key that it keeps secret, and a public key the client nodes will use to connect to the server.
+
+##### Generating a key pair
+The key pair can be generated on any of the server nodes, for simplicity, the key pair for the the server will be generated on the server node.   
+
+First, generate the ***private key***.   
+On the server node, run:
+```
+wg genkey | sudo tee /etc/wireguard/private.key
+```
+
+This command should output the *private key*. ***Make a note of this key***.
+
+The key is saved to `/etc/wireguard/private.key`.   
+This key doesn't need to be shared, it is only used by the node to the decrypt secure data, therefore, to keep it safe, it is a good idea to remove all permissions on the file for all users except the root user.   
+To do this, run the command:   
+```
+sudo chmod go= /etc/wireguard/private.key
+```
+You can still output the private key using `sudo`.   
+To view the `private.key` file, run `sudo cat /etc/wireguard/private.key`, this should output the private key.   
+
+Next, we will generate the corresponding public key, this public key is derived from the private key.   
+
+To generate a corresponding public key, run:   
+```
+sudo cat /etc/wireguard/private.key | wg pubkey | sudo tee /etc/wireguard/public.key
+```
+This command should output the *public key*. ***Make a note of this key also***.   
+
+##### Configuring the WireGuard server
+
+The WireGuard server can now be configured with the IP address range and the private key.   
+We will create a new configuration file to set up the server.   
+The `nano` editor can be used to create and edit this configuration file.
+I will be creating the configuration within the directory `/etc/wireguard`, the file will be named `wg0.conf`.   
+
+To create the new file in the desired location, run:
+```
+sudo nano /etc/wireguard/wg0.conf
+```
+The file isn't created until saved (`Ctrl + S` or exiting and choosing the save option `Ctrl + X`).   
+
+The configuration in this file is as follows:
+```
+[Interface]
+PrivateKey = <base64_encoded_private_key_goes_here>
+Address = <server_ip_address>/<subnet_mask>
+ListenPort = <vpn_listen_port>
+SaveConfig = true
+```
+
+If my private key is: `iFpE8J8JZhGoWPMRQvUxoAads+EjEjtiL2I4eE476n0=`, my configuration would be:
+```
+[Interface]
+PrivateKey = iFpE8J8JZhGoWPMRQvUxoAads+EjEjtiL2I4eE476n0=
+Address = 10.10.10.0/24
+ListenPort = 51820
+SaveConfig = true
+```
+I will be setting my WireGuard server's IP address as `10.10.10.0`, so this is what I put as the `server_ip_address`.   
+As the allowed IP address range of the clients is between `10.10.10.0` to `10.10.10.255`, the `subnet_mask` is `24`.   
+The default port for WireGuard is `51820`, I will be leaving this as th default.   
+
+Save this configuration file using `Ctrl + S` and exit using `Ctrl + X`.   
+
+##### Starting up the WireGuard server
+
+Now that the WireGuard server is configured, it can be started up.   
+The VPN can be configured to start up at boot automatically using `systemctl`.   
+To enable `systemctl` to automatically start the WireGuard service, run:   
+```
+sudo systemctl enable wg-quick@wg0.service
+```
+If you named the config something other than `wg0`, remember to use that filename in the command.   
+
+> You can create multiple configurations and enable multiple servers all with different keys and IP address ranges.   
+
+The service can now be started:   
+```
+sudo systemctl start wg-quick@wg0.service
+```
+You can check to see if the service is running using:   
+```
+sudo systemctl status wg-quick@wg0.service
+```
+You should see `active (running)`, in the output (usually green).   
+
+
+#### Setup WireGuard VPN client
+
+The setup to make WireGuard run as a client is similar to setting up WireGuard as a a server, the main difference is in the configuration file.
+
+##### Generating a key pair
+
+Every server node (Manager and Worker) will need a key pair.   
+The process of [generating the key pair](#generating-a-key-pair) for a client node, is the same as the server nodes.    
+
+For simplicity, I will generate the key pair for the client(s) on the client node(s).   
+Remember to make a note of the `private key` and `public key` for each node.
+
+##### Configuring the WireGuard client(s)
+
+Just as when [configuring the WirGuard server](#configuring-the-wireguard-server), on the client(s) (worker server nodes), create a configuration file within the directory `/etc/wireguard`, the file will also be named `wg0.conf`.   
+
+```
+sudo nano /etc/wireguard/wg0.conf
+```
+
+```
+[Interface]
+PrivateKey = <base64_encoded_private_key_goes_here>
+Address = <server_ip_address>/<subnet_mask>
+
+[Peer]
+PublicKey = <base64_encoded_server_public_key_goes_here>
+AllowedIPs = <vpn_subnet>
+Endpoint = <ip_address_of_vpn_server>:<vpn_server_listen_port>
+```
+
+For Worker Node 1 (Client),   
+If my `private key` is `dfzsdfa_____TODO_____`, and my server's `public key` is `asdkgfhoghe____TODO____`.
+
+My configuration would be:
+```
+[Interface]
+PrivateKey = dfzsdfa_________
+Address = 10.10.10.1/24
+
+[Peer]
+PublicKey = asdkgfhoghe______
+AllowedIPs = 10.10.10.0/24
+Endpoint = 192.168.2.100:51820
+```
+
+##### Starting up the WireGuard client(s)
+
+#### Testing the VPN connection
+
+### NFS
+
+#### Install NFS
+
+#### Configure NFS Server
+
+#### Test mount NFS share
+
+### Docker
+
+#### Install Docker
+
+#### Create Docker Swarm
+
+#### Deploy Portainer Across Docker Swarm

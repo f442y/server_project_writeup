@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MD Abridged</title>
+    <script src=" https://cdn.jsdelivr.net/npm/showdown@2.1.0/dist/showdown.min.js"></script>
+    <!-- Halfmoon CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/halfmoon@1.1.1/css/halfmoon-variables.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="./style.css">
+</head>
+
+<body class="with-custom-webkit-scrollbars with-custom-css-scrollbars" data-dm-shortcut-enabled="true"
+    data-sidebar-shortcut-enabled="true" data-set-preferred-mode-onload="true">
+    <!-- Modals go here -->
+    <!-- Reference: https://www.gethalfmoon.com/docs/modal -->
+
+    <!-- Page wrapper start -->
+    <div class="page-wrapper with-navbar with-sidebar" data-sidebar-type="overlayed-sm-and-down">
+
+        <!-- Sticky alerts (toasts), empty container -->
+        <!-- Reference: https://www.gethalfmoon.com/docs/sticky-alerts-toasts -->
+        <div class="sticky-alerts"></div>
+
+        <!-- Navbar start -->
+        <!-- Navbar (immediate child of the page wrapper) -->
+        <nav class="navbar justify-content-between">
+            <!-- Navbar content (with toggle sidebar button) -->
+            <div class="navbar-content">
+                <button class="btn btn-action" type="button" onclick="halfmoon.toggleSidebar()">
+                    <img src="./web_assets/hamburger-menu.png" alt="" class="img-fluid">
+                    <span class="sr-only">Toggle sidebar</span> <!-- sr-only = show only on screen readers -->
+                </button>
+            </div>
+            <!-- Navbar brand -->
+            <a href="#" class="navbar-brand">
+                <img src="./favicon.ico" alt="...">
+                Server Project
+            </a>
+            <!-- Navbar text -->
+            <span class="navbar-text text-monospace">v0.0.1</span>
+            <!-- text-monospace = font-family shifted to monospace -->
+
+            <div class="navbar-content ml-auto">
+                <button class="btn btn-action mr-5" type="button" onclick="halfmoon.toggleDarkMode()">
+                    <img src="./web_assets/dark-mode.png" alt="" class="img-fluid">
+                    <span class="sr-only">Toggle dark mode</span>
+                </button>
+            </div>
+        </nav>
+        <!-- Navbar end -->
+
+        <!-- Sidebar overlay -->
+        <div class="sidebar-overlay" onclick="halfmoon.toggleSidebar()"></div>
+
+        <!-- Sidebar start -->
+        <div class="sidebar">
+            <!-- Reference: https://www.gethalfmoon.com/docs/sidebar -->
+            <div class="sidebar-divider"></div>
+            <a href="#" class="sidebar-link sidebar-link-with-icon">
+                <span class="sidebar-icon">
+                    <img src="./web_assets/home-button.png" alt="home icon" class="img-fluid">
+                </span>
+                Home
+            </a>
+            <div class="sidebar-divider"></div>
+            <h5 class="sidebar-title">Sections</h5>
+            <div class="sidebar-divider"></div>
+            <!-- Collapse group -->
+            <div id="sidebar-sections" class="collapse-group mw-full">
+                <!-- w-500 = width: 50rem (500px), mw-full = max-width: 100% -->
+            </div>
+        </div>
+        <!-- Sidebar end -->
+
+        <!-- Content wrapper start -->
+        <div class="content-wrapper">
+            <!--
+          Add your page's main content here
+          Examples:
+          1. https://www.gethalfmoon.com/docs/content-and-cards/#building-a-page
+          2. https://www.gethalfmoon.com/docs/grid-system/#building-a-dashboard
+        -->
+            <div id="content" class="container-fluid"></div>
+        </div>
+        <!-- Content wrapper end -->
+
+    </div>
+    <!-- Page wrapper end -->
+
+    <script src="./js.js"></script>
+    <!-- Halfmoon JS -->
+    <script src="https://cdn.jsdelivr.net/npm/halfmoon@1.1.1/js/halfmoon.min.js"></script>
+</body>
+
+</html>
