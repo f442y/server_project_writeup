@@ -1,26 +1,40 @@
-var parser = new DOMParser();
-var converter = new showdown.Converter();
-
-// An array of all the sections (ordered)
 const sections = [
-    "intro_page",
-    "setting_up_server_nodes",
-    "setting_up_system_architecture",
-];
+    ["intro_page", "Intro"],
+    ["setting_up_server_nodes", "Setting Up Server Nodes"],
+    ["setting_up_system_architecture", "Setting Up System Architecture"],
+]
 
-main = async () => {
-    fixed_path_images = "/server_project_md/";
-    await githubPagesCheck();
+const parser = new DOMParser();
+const converter = new showdown.Converter();
+const sections_map = new Map();
 
-    sections.forEach(createDiv)
-    sections.forEach(getMDandAppend)
+let structure = {
+    sections_map: sections_map,
+    active_section: "intro_page",
+    fixed_paths: {
+        image_files: "/server_project_md/",
+        markdown_files: "/server_project_md/",
+    }
 }
 
-createDiv = (section_name) => {
-    const newDiv = document.createElement("div");
-    newDiv.id = section_name;
-    newDiv.classList.add("content");
-    document.getElementById("content").appendChild(newDiv);
+addSectionToMap = (id, title) => {
+    sections_map.set(id, {
+        id: id,
+        title: title,
+        html_element: null
+    });
+}
+
+sections.forEach(section => { addSectionToMap(section[0], section[1]) })
+
+main = async () => {
+    await githubPagesCheck();
+
+    structure.sections_map.forEach(section => {
+        initSidebarSections(section.id, section.title);
+        attachSidebarListener(section.id);
+    })
+    await updatePage();
 }
 
 /**
@@ -32,15 +46,30 @@ createDiv = (section_name) => {
 githubPagesCheck = () => {
     const hostname = window.location.hostname.split(".").slice(-2).join(".");
     if (hostname == "github.io") {
-        fixed_path_md = `/${window.location.pathname.split("/")[1]}/server_project_md/`;
-    } else {
-        fixed_path_md = "/server_project_md/";
+        structure.fixed_paths.markdown_files = `/${window.location.pathname.split("/")[1]}/server_project_md/`;
     }
 }
 
-getMDandAppend = async (section_name) => {
+updatePage = async () => {
+    const active_section_id = structure.active_section;
+    await fetchMD_ProcessAndAppend(active_section_id);
+    updateSidebar();
+    updateContent();
+}
+
+updateSidebar = () => {
+    structure.sections_map.forEach(section => {
+        if (structure.active_section == section.id) {
+            document.getElementById(`${section.id}_sidebar`).open = true;
+        } else {
+            document.getElementById(`${section.id}_sidebar`).open = false;
+        }
+    })
+}
+
+fetchMD_ProcessAndAppend = async (section_id) => {
     // Fetch the Markdown file in text format
-    md_text = await fetchMDfile(fixed_path_md, section_name);
+    md_text = await fetchMDfile(structure.fixed_paths.markdown_files, section_id);
 
     // While the file is in text format, remove the table of contents (TOC) for the file
     md_text_no_TOC = await removeTOC(md_text);
@@ -52,14 +81,11 @@ getMDandAppend = async (section_name) => {
     html_element = await convertTextToHtmlDocument(html_text);
 
     // Edit src of img tags in HTML document
-    html_element = editImgSrc(html_element, fixed_path_images, section_name);
+    html_element = editImgSrc(html_element, structure.fixed_paths.image_files, section_id);
 
-    addSectionToSidebar(html_element, section_name);
+    structure.sections_map.get(section_id).html_element = html_element;
 
-    // Add styling classes to html tags
-    html_element = await addClassesToTags(html_element, section_name);
-
-    appendElement(html_element, section_name);
+    document.getElementById(`${section_id}_sidebar_download_icon`).src = `./web_assets/check-mark.png`
 }
 
 fetchMDfile = async (fixed_path_md, section_name) => {
@@ -97,41 +123,69 @@ editImgSrc = (html_element, fixed_path_images, section_name) => {
     return html_element;
 }
 
-addSectionToSidebar = (html_element, section_name) => {
-    var details_element = document.createElement("details");
-    details_element.id = `${section_name}_sidebar`;
+initSidebarSections = (section_id, section_title) => {
+    let details_element = document.createElement("details");
+    details_element.id = `${section_id}_sidebar`;
     details_element.classList.add("collapse-panel");
 
-    var summary_element = document.createElement("summary");
-    summary_element.classList.add("collapse-header");
-    summary_element.innerHTML = html_element.getElementsByTagName("h2")[0].innerHTML;
+    let summary_element = document.createElement("summary");
+    summary_element.classList.add("collapse-header", "sidebar-link", "sidebar-link-with-icon", "without-arrow");
 
+    let summary_element_icon = document.createElement("span");
+    summary_element_icon.classList.add("sidebar-icon");
+    let summary_element_icon_img = document.createElement("img");
+    summary_element_icon_img.id = `${section_id}_sidebar_download_icon`;
+    summary_element_icon_img.src = `./web_assets/download-icon.png`;
+    summary_element_icon_img.classList.add("img-fluid", "w-half");
+    summary_element_icon.append(summary_element_icon_img);
+    summary_element.append(summary_element_icon);
+
+    summary_element.append(section_title);
 
     var content_element = document.createElement("div");
-    content_element.id = `${section_name}_sidebar_content`;
-    content_element.classList.add("collapse-content")
+    content_element.id = `${section_id}_sidebar_content`;
+    content_element.classList.add("collapse-content");
 
     details_element.append(summary_element);
     details_element.append(content_element);
 
+
+
     document.getElementById("sidebar-sections").appendChild(details_element);
 }
 
-appendElement = (html_element, section_name) => {
-    var elements_in_body_list = Array.prototype.slice.call(html_element.body.querySelectorAll('body > *'));
+attachSidebarListener = (section_id) => {
+
+    document.getElementById(`${section_id}_sidebar`).addEventListener(
+        "click",
+        () => {
+            structure.active_section = section_id;
+            updatePage();
+        },
+    )
+
+}
+
+updateContent = (html_element) => {
+    let content = document.getElementById("content");
+    content.innerHTML = "";
+    const element = structure.sections_map.get(structure.active_section).html_element;
+    var elements_in_body_list = Array.prototype.slice.call(element.body.querySelectorAll('body > *'));
     elements_in_body_list.forEach(element => {
         element.classList.add();
-        document.getElementById(section_name).appendChild(element);
+        document.getElementById("content").appendChild(element);
     })
+
+    addClassesToTags();
 }
 
 /**
  * To correctly format the HTML, classes need to be added to the HTML tags, this allows 
  * the correct CSS formatting of the HTML elements.
  */
-addClassesToTags = (html_element, section_name) => {
+addClassesToTags = () => {
     // Root div of section
-    document.getElementById(section_name).classList.add()
+    html_element = document.getElementById("content")
 
     // Individual tags of section
     html_element.querySelectorAll("p").forEach(tag => {
@@ -152,7 +206,7 @@ addClassesToTags = (html_element, section_name) => {
     html_element.querySelectorAll("blockquote").forEach(tag => {
         tag.classList.add("text-muted");
     });
-    return html_element;
+
 }
 
 main();

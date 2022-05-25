@@ -59,13 +59,6 @@
         <div class="sidebar">
             <!-- Reference: https://www.gethalfmoon.com/docs/sidebar -->
             <div class="sidebar-divider"></div>
-            <a href="#" class="sidebar-link sidebar-link-with-icon">
-                <span class="sidebar-icon">
-                    <img src="./web_assets/home-button.png" alt="home icon" class="img-fluid">
-                </span>
-                Home
-            </a>
-            <div class="sidebar-divider"></div>
             <h5 class="sidebar-title">Sections</h5>
             <div class="sidebar-divider"></div>
             <!-- Collapse group -->
@@ -83,7 +76,9 @@
           1. https://www.gethalfmoon.com/docs/content-and-cards/#building-a-page
           2. https://www.gethalfmoon.com/docs/grid-system/#building-a-dashboard
         -->
-            <div id="content" class="container-fluid"></div>
+            <div id="content-fluid-wrapper" class="container-fluid">
+                <div id="content" class="content"></div>
+            </div>
         </div>
         <!-- Content wrapper end -->
 
