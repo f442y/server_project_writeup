@@ -196,7 +196,16 @@ updateSidebarContents = () => {
         a.href = `#${header.id}`;
         a.classList.add(`ml-${(header.tagName.charAt(1) * 5) - 10}`)
         div.append(a);
-        contents.append(div);
+        if (header.tagName.charAt(1) < 4) {
+            div.classList.add("pt-20");
+            contents.append(div);
+            const divider = document.createElement("div")
+            divider.classList.add("sidebar-divider");
+            contents.append(divider);
+        } else {
+            contents.append(div);
+        }
+
     })
     sidebar_content_element = document.getElementById(`${active_section_id}_sidebar_content`);
     sidebar_content_element.innerHTML = "";
