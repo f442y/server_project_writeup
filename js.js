@@ -182,13 +182,25 @@ updateContent = () => {
 }
 
 updateSidebarContents = () => {
+    const contents = document.createElement("div");
+    contents.id = "toc";
+
     const active_section_id = structure.active_section;
     const element = structure.sections_map.get(active_section_id).html_element.cloneNode(true);
     const headers_in_body_list = element.body.querySelectorAll("h1, h2, h3, h4, h5, h6");
     headers_in_body_list.forEach(header => {
-        console.log(header.tagName);
-        console.log(header.id);
+        const div = document.createElement("div");
+        div.classList.add("container");
+        const a = document.createElement("a");
+        a.innerHTML = header.innerHTML;
+        a.href = `#${header.id}`;
+        a.classList.add(`ml-${(header.tagName.charAt(1) * 5) - 10}`)
+        div.append(a);
+        contents.append(div);
     })
+    sidebar_content_element = document.getElementById(`${active_section_id}_sidebar_content`);
+    sidebar_content_element.innerHTML = "";
+    sidebar_content_element.append(contents);
 }
 
 /**
