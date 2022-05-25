@@ -8,7 +8,7 @@ const parser = new DOMParser();
 const converter = new showdown.Converter();
 const sections_map = new Map();
 
-let structure = {
+const structure = {
     sections_map: sections_map,
     active_section: "intro_page",
     fixed_paths: {
@@ -53,11 +53,12 @@ githubPagesCheck = () => {
 updatePage = async () => {
     const active_section_id = structure.active_section;
     await fetchMD_ProcessAndAppend(active_section_id);
-    updateSidebar();
-    updateContent();
+    updateSidebarAccordion();
+    await updateContent();
+    updateSidebarContents();
 }
 
-updateSidebar = () => {
+updateSidebarAccordion = () => {
     structure.sections_map.forEach(section => {
         if (structure.active_section == section.id) {
             document.getElementById(`${section.id}_sidebar`).open = true;
@@ -145,6 +146,7 @@ initSidebarSections = (section_id, section_title) => {
     var content_element = document.createElement("div");
     content_element.id = `${section_id}_sidebar_content`;
     content_element.classList.add("collapse-content");
+    content_element.innerHTML = "Generating Contents..."
 
     details_element.append(summary_element);
     details_element.append(content_element);
@@ -166,17 +168,27 @@ attachSidebarListener = (section_id) => {
 
 }
 
-updateContent = (html_element) => {
+updateContent = () => {
     let content = document.getElementById("content");
     content.innerHTML = "";
-    const element = structure.sections_map.get(structure.active_section).html_element;
-    var elements_in_body_list = Array.prototype.slice.call(element.body.querySelectorAll('body > *'));
+    const element = structure.sections_map.get(structure.active_section).html_element.cloneNode(true);
+    const elements_in_body_list = Array.prototype.slice.call(element.body.querySelectorAll('body > *'));
     elements_in_body_list.forEach(element => {
         element.classList.add();
         document.getElementById("content").appendChild(element);
     })
 
     addClassesToTags();
+}
+
+updateSidebarContents = () => {
+    const active_section_id = structure.active_section;
+    const element = structure.sections_map.get(active_section_id).html_element.cloneNode(true);
+    const headers_in_body_list = element.body.querySelectorAll("h1, h2, h3, h4, h5, h6");
+    headers_in_body_list.forEach(header => {
+        console.log(header.tagName);
+        console.log(header.id);
+    })
 }
 
 /**
