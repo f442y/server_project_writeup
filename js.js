@@ -197,7 +197,7 @@ updateSidebarContents = () => {
         a.classList.add(`ml-${(header.tagName.charAt(1) * 5) - 10}`)
         div.append(a);
         if (header.tagName.charAt(1) < 4) {
-            div.classList.add("pt-20");
+            div.classList.add("pt-20", "font-weight-semi-bold");
             contents.append(div);
             const divider = document.createElement("div")
             divider.classList.add("sidebar-divider");
