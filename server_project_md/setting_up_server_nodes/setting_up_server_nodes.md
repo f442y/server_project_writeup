@@ -16,6 +16,7 @@ Linux, apt, command line, mounting volumes, systemd  -->
 
 <!-- TOC:start -->
 - [Setting Up the Server Nodes](#setting-up-the-server-nodes)
+  - [Target Diagram](#target-diagram)
   - [Prepare Storage Devices](#prepare-storage-devices)
     - [SD Cards](#sd-cards)
     - [SSD/HDD](#ssdhdd)
@@ -50,6 +51,12 @@ Linux, apt, command line, mounting volumes, systemd  -->
     - [<span style="color:orange">Automatically Mount on boot</span>](#automatically-mount-on-boot)
 
 <!-- TOC:end -->
+
+### Target Diagram
+
+<p align="center">
+  <img src="./resources/setting_up_server_nodes_diagram.svg" alt="Minitool Partition Demo"/>
+</p>
 
 ### Prepare Storage Devices
 Before the storage devices are connected and used, they must be prepared, this includes the SD card(s) that the server(s) will boot from and the SATA SSD (Solid State Drive) which will be used for persistent network data storage.
