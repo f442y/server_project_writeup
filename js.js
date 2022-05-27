@@ -40,6 +40,7 @@ main = async () => {
 
 window.onload = () => {
     structure.theme_mode = halfmoon.getPreferredMode();
+    switchThemeToggleImage();
     switchHLJSTheme();
 }
 
@@ -47,16 +48,28 @@ themeChangeToggle = () => {
     halfmoon.toggleDarkMode();
     structure.theme_mode = halfmoon.getPreferredMode();
     console.log(structure.theme_mode);
+    switchThemeToggleImage();
     switchHLJSTheme();
 }
 
 switchHLJSTheme = () => {
+    const hljsDarkStyle = document.getElementById("hljs-dark-style");
+    const hljsLightStyle = document.getElementById("hljs-light-style");
+
     if (structure.theme_mode == "light-mode") {
-        document.getElementById("hljs-dark-style").disabled = true
-        document.getElementById("hljs-light-style").disabled = false
+        hljsDarkStyle.disabled = true
+        hljsLightStyle.disabled = false
     } else {
-        document.getElementById("hljs-dark-style").disabled = false
-        document.getElementById("hljs-light-style").disabled = true
+        hljsDarkStyle.disabled = false
+        hljsLightStyle.disabled = true
+    }
+}
+switchThemeToggleImage = () => {
+    const theme_image_element = document.getElementById("theme_img");
+    if (structure.theme_mode == "light-mode") {
+        theme_image_element.src = "./web_assets/moon.png";
+    } else {
+        theme_image_element.src = "./web_assets/sun.png";
     }
 }
 
