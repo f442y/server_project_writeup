@@ -253,10 +253,13 @@ updateSidebarContents = () => {
 
 editContentLinkTags = async (anchorElement) => {
     anchorElement.forEach(a => {
-        const href = a.getAttribute("href")
+        const href = a.getAttribute("href");
         if (href.charAt(0) == "#") {
             a.setAttribute("href", href.replaceAll("-", ""));
+        } else {
+            a.setAttribute("target", "_blank")
         };
+
     });
 }
 
