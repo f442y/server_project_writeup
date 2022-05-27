@@ -47,7 +47,6 @@ window.onload = () => {
 themeChangeToggle = () => {
     halfmoon.toggleDarkMode();
     structure.theme_mode = halfmoon.getPreferredMode();
-    console.log(structure.theme_mode);
     switchThemeToggleImage();
     switchHLJSTheme();
 }
