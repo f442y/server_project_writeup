@@ -48,7 +48,7 @@ Linux, apt, command line, mounting volumes, systemd  -->
     - [Manually set server hostname](#manually-set-server-hostname)
   - [Mounting a USB Drive](#mounting-a-usb-drive)
     - [Mount once](#mount-once)
-    - [<span style="color:orange">Automatically Mount on boot</span>](#automatically-mount-on-boot)
+    - [Automatically Mount on boot](#automatically-mount-on-boot)
 
 <!-- TOC:end -->
 
@@ -623,7 +623,7 @@ Running `df -h` should show the USB drive mounted at the created directory, any 
 
 This mount is not permanent, and the USB drive will not stay mounted after a reboot.
 
-#### <span style="color:orange">Automatically Mount on boot</span>
+#### Automatically Mount on boot
 
 To mount automatically at boot, we need the `UUID` of the USB drive, this can be found running the following command:
 
