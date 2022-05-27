@@ -86,10 +86,9 @@ githubPagesCheck = () => {
 }
 
 updatePage = async () => {
-    const active_section_id = structure.active_section;
-    await fetchMD_ProcessAndAppend(active_section_id);
+    await fetchMD_ProcessAndAppendToStructure();
     updateSidebarAccordion();
-    await updateContent();
+    updateContent();
     updateSidebarContents();
 }
 
@@ -103,9 +102,10 @@ updateSidebarAccordion = () => {
     })
 }
 
-fetchMD_ProcessAndAppend = async (section_id) => {
+fetchMD_ProcessAndAppendToStructure = async () => {
+    const active_section_id = structure.active_section;
     // Fetch the Markdown file in text format
-    md_text = await fetchMDfile(structure.fixed_paths.markdown_files, section_id);
+    md_text = await fetchMDfile(structure.fixed_paths.markdown_files, active_section_id);
 
     // While the file is in text format, remove the table of contents (TOC) for the file
     md_text_no_TOC = await removeTOC(md_text);
@@ -117,11 +117,11 @@ fetchMD_ProcessAndAppend = async (section_id) => {
     html_element = await convertTextToHtmlDocument(html_text);
 
     // Edit src of img tags in HTML document
-    html_element = editImgSrc(html_element, structure.fixed_paths.image_files, section_id);
+    html_element = editImgSrc(html_element, structure.fixed_paths.image_files, active_section_id);
 
-    structure.sections_map.get(section_id).html_element = html_element;
+    structure.sections_map.get(active_section_id).html_element = html_element;
 
-    document.getElementById(`${section_id}_sidebar_download_icon`).src = `./web_assets/check-mark.png`
+    document.getElementById(`${active_section_id}_sidebar_download_icon`).src = `./web_assets/check-mark.png`
 }
 
 fetchMDfile = async (fixed_path_md, section_name) => {
