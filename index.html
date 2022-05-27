@@ -5,10 +5,19 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MD Abridged</title>
+    <title>Server Project Writeup</title>
+    <!-- Showdown JS -->
     <script src=" https://cdn.jsdelivr.net/npm/showdown@2.1.0/dist/showdown.min.js"></script>
     <!-- Halfmoon CSS -->
     <link href="https://cdn.jsdelivr.net/npm/halfmoon@1.1.1/css/halfmoon-variables.min.css" rel="stylesheet" />
+    <!-- HighlightJS CSS Themes -->
+    <!-- Light Theme -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/mono-blue.min.css"
+        id="hljs-light-style" />
+    <!-- Dark Theme -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/github-dark.min.css"
+        id="hljs-dark-style" />
+    <!-- style.css -->
     <link rel="stylesheet" href="./style.css">
 </head>
 
@@ -44,7 +53,7 @@
             <!-- text-monospace = font-family shifted to monospace -->
 
             <div class="navbar-content ml-auto">
-                <button class="btn btn-action mr-5" type="button" onclick="halfmoon.toggleDarkMode()">
+                <button class="btn btn-action mr-5" type="button" onclick="themeChangeToggle()">
                     <img src="./web_assets/dark-mode.png" alt="" class="img-fluid">
                     <span class="sr-only">Toggle dark mode</span>
                 </button>

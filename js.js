@@ -14,7 +14,8 @@ const structure = {
     fixed_paths: {
         image_files: "/server_project_md/",
         markdown_files: "/server_project_md/",
-    }
+    },
+    theme_mode: "dark-mode",
 }
 
 addSectionToMap = (id, title) => {
@@ -35,6 +36,28 @@ main = async () => {
         attachSidebarListener(section.id);
     })
     await updatePage();
+}
+
+window.onload = () => {
+    structure.theme_mode = halfmoon.getPreferredMode();
+    switchHLJSTheme();
+}
+
+themeChangeToggle = () => {
+    halfmoon.toggleDarkMode();
+    structure.theme_mode = halfmoon.getPreferredMode();
+    console.log(structure.theme_mode);
+    switchHLJSTheme();
+}
+
+switchHLJSTheme = () => {
+    if (structure.theme_mode == "light-mode") {
+        document.getElementById("hljs-dark-style").disabled = true
+        document.getElementById("hljs-light-style").disabled = false
+    } else {
+        document.getElementById("hljs-dark-style").disabled = false
+        document.getElementById("hljs-light-style").disabled = true
+    }
 }
 
 /**
@@ -168,13 +191,16 @@ attachSidebarListener = (section_id) => {
 
 }
 
-updateContent = () => {
+updateContent = async () => {
     let content = document.getElementById("content");
     content.innerHTML = "";
     const element = structure.sections_map.get(structure.active_section).html_element.cloneNode(true);
     const elements_in_body_list = Array.prototype.slice.call(element.body.querySelectorAll('body > *'));
     elements_in_body_list.forEach(element => {
-        element.classList.add();
+        const a = element.querySelectorAll("a");
+        if (a.length > 0) {
+            editContentLinkTags(a);
+        };
         document.getElementById("content").appendChild(element);
     })
 
@@ -212,6 +238,16 @@ updateSidebarContents = () => {
     sidebar_content_element.append(contents);
 }
 
+editContentLinkTags = async (anchorElement) => {
+    anchorElement.forEach(a => {
+        const href = a.getAttribute("href")
+        if (href.charAt(0) == "#") {
+            a.setAttribute("href", href.replaceAll("-", ""));
+        };
+    });
+}
+
+
 /**
  * To correctly format the HTML, classes need to be added to the HTML tags, this allows 
  * the correct CSS formatting of the HTML elements.
@@ -231,10 +267,10 @@ addClassesToTags = () => {
         tag.classList.add("img-fluid", "rounded");
     });
     html_element.querySelectorAll("code").forEach(tag => {
-        tag.classList.add("code");
+        tag.classList.add("hljs");
     });
     html_element.querySelectorAll("pre").forEach(tag => {
-        tag.classList.add("scroll");
+        tag.classList.add("scroll", "hljs");
     });
     html_element.querySelectorAll("blockquote").forEach(tag => {
         tag.classList.add("text-muted");
