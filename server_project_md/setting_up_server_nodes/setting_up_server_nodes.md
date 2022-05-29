@@ -55,7 +55,7 @@ Linux, apt, command line, mounting volumes, systemd  -->
 ### Target Diagram
 
 <p align="center">
-  <img src="./resources/setting_up_server_nodes_diagram.svg" alt="Minitool Partition Demo"/>
+  <img src="./resources/diagram_setting_up_server_nodes.svg" alt="Diagram: Setting Up Server Nodes"/>
 </p>
 
 ### Prepare Storage Devices
@@ -78,6 +78,11 @@ I recommend clearing all partitions and then (optional) creating a single FAT32 
 > An OS boot SD card should ideally be Class 10 or faster and 16GB+
 
 #### SSD/HDD
+
+<p align="center">
+  <img src="./resources/diagram_sata_drive.svg" alt="Diagram: SATA SSD"/>
+</p>
+
 The SSD will also have all partitions removed (if any exist).   
 As no OS will be written to the SSD, partitions will have to be made in order to actually use it.   
 I will be formatting the SSD to have a single partition, only this time the file system will not be FAT32, it will be Ext4.   
@@ -90,8 +95,19 @@ When formatted you will notice that there will be a small percentage of disk spa
 ### Connecting Main Components
 
 ### Installing and Setting Up an Operating System (OS)
+
+<p align="center">
+  <img src="./resources/diagram_installing_and_setup_OS.svg" alt="Diagram: Install and Set up an OS"/>
+</p>
+
 #### Installing an OS
+
 ##### Raspberry Pi 4
+
+<p align="center">
+  <img src="./resources/daigram_OS_RPi.svg" alt="Diagram: OS Raspberry Pi"/>
+</p>
+
 For the Raspberry Pi there are many operating systems (OS's) to choose from. I considered DietPi and Ubuntu, but to keep things relatively simple, I will be using a stock Raspberry Pi OS, more specifically Raspberry Pi OS Lite (64-bit).
 > DietPi is a stripped down version of the Raspberry Pi OS (same kernel), uses less RAM, bloatware optional.
 
@@ -125,6 +141,11 @@ Ensure you select the required choices in Imager's settings.
 
 
 ##### Orange Pi Zero 2
+
+<p align="center">
+  <img src="./resources/diagram_OS_OPi.svg" alt="Diagram: OS Orange Pi"/>
+</p>
+
 For the Orange Pi Zero 2, compared to the Raspberry Pi there are not as many OS's available to choose from.   
 I will be using the Ubuntu Server Focal 20.04 (kernel 5.13) image provided by the manufacturer.   
 
@@ -139,6 +160,11 @@ Manually setting up Wi-Fi before first boot on Ubuntu can be difficult, and may 
 [Here](https://techexplorations.com/guides/rpi/begin/ssh-wifi-headless/) is a guide to manual SSH and Wi-FI setup using the Raspberry Pi, the SSH steps are the same for the Orange Pi. The Wi-Fi steps may not work.  
 
 ###### Manually enable SSH on first boot
+
+<p align="center">
+  <img src="./resources/diagram_ssh_server.svg" alt="Diagram: SSH Server"/>
+</p>
+
 After flashing (writing) the OS to the SD card, do not insert it into to the host, instead reinsert it into your computer, and the SD card should show up in the OS's file explorer, open this drive and view it's folders.   
 Only a small partition of the SD card will be mounted to the computer, so the capacity will be smaller than the full SD card
 
@@ -171,6 +197,11 @@ To see if the file is created, use the command `ls`, this should show the files 
 
 
 #### SSH
+
+<p align="center">
+  <img src="./resources/diagram_ssh_to_lan.svg" alt="Diagram: SSH Server to LAN"/>
+</p>
+
 It is possible to work directly on the server by connecting a display (via HDMI) and keyboard (via USB), however, in practice, servers are usually accessed remotely via the **Secure Shell Protocol** (**SSH**).   
 In order to connect this way, A host/server requires a local network connection and an SSH server to be running.   
 The SSH server should be running on first boot, provided that the necessary steps were followed during installation.
@@ -302,6 +333,11 @@ The default password for the `orangepi` user is `orangepi`.
 
 
 #### Updating Firmware and Software
+
+<p align="center">
+  <img src="./resources/diagram_OS_to_Internet.svg" alt="Diagram: OS to Internet"/>
+</p>
+
 As the server is fresh and not in active use, now is a good time to update the Firmware and Software.   
 
 To update, the servers will need an internet connection.   
@@ -337,6 +373,11 @@ Run the command `sudo apt autoremove` followed by `sudo apt autoclean`, there ma
 Now we have a fresh and updated OS installed on our server(s), to ensure the server is updated run `sudo apt update`, this command should show if any packages need updating.
 
 ##### Orange Pi Zero 2 update sources
+
+<p align="center">
+  <img src="./resources/diagram_OS_OPi.svg" alt="Diagram: Orange Pi"/>
+</p>
+
 The stock Ubuntu OS images were compiled in china, so the OS's update sources are set to the sources in china, while this would successfully update the host repositories without issue, it is a good idea to use a more local source of updates.
 
 The URLs for the update sources are defined in a file called "`sources.list`", the file is located in the directory `/etc/apt`.   
@@ -424,6 +465,11 @@ The host will now use the new URLs as update sources, run `sudo apt update`.
 If something does go wrong with the update, the backup (`sources.list.old`) file contains the the original data which can be copied back in.
 
 #### Static IP
+
+<p align="center">
+  <img src="./resources/diagram_OS_to_LAN.svg" alt="Diagram: OS to LAN"/>
+</p>
+
 When we [found the local IP address](#finding-a-local-ssh-server-ip-address) of our server, that IP address was assigned to to the host by the router dynamically via a protocol called `DHCP`.   
 As this is a dynamic IP address, it can also be reassigned to another device, as we will be remotely connecting to our server(s), it is a good idea to give our host(s) a **static IP**.      
 
@@ -578,6 +624,10 @@ Once complete reboot the server (`sudo reboot`).
 
 
 ### Mounting a USB Drive
+
+<p align="center">
+  <img src="./resources/diagram_mounting_usb_drive.svg" alt="Diagram: Mounting a USB Drive"/>
+</p>
 
 After connecting a USB drive, it is not automatically accessible, this is because it needs to be mounted.   
 When running the command `df -h`, notice that only the OS's file systems are mounted.   
