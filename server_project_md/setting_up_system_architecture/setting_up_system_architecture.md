@@ -14,6 +14,7 @@
 <!-- TOC:start -->
 
 - [Setting Up System Architecture](#setting-up-system-architecture)
+  - [Target Diagram](#target-diagram)
   - [VPN (WireGuard)](#vpn-wireguard)
     - [Install WireGuard](#install-wireguard)
     - [Choosing VPN IP address range](#choosing-vpn-ip-address-range)
@@ -36,6 +37,12 @@
     - [Deploy Portainer Across Docker Swarm](#deploy-portainer-across-docker-swarm)
 
 <!-- TOC:end -->
+
+### Target Diagram
+
+<p align="center">
+  <img src="./resources/diagram_setting_up_system_architecture.svg" alt="Diagram: Setting Up System Architecture"/>
+</p>
 
 ### VPN (WireGuard)
 
