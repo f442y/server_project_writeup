@@ -46,6 +46,10 @@
 
 ### VPN (WireGuard)
 
+<p align="center">
+  <img src="./resources/diagram_VPN_on_LAN.svg" alt="Diagram: VPN on LAN"/>
+</p>
+
 I will be running a WireGuard Server on the manager server node of my cluster, this server will be used exclusively by the server nodes to share data.   
 
 The VPN will not be used to tunnel all data to the local network or the internet, the nodes will be able to connect to the internet to update and download docker images.
@@ -59,6 +63,10 @@ It is recommended to have a Static IP address on all devices that will be a part
 
 #### Install WireGuard
 
+<p align="center">
+  <img src="./resources/diagram_install_VPN.svg" alt="Diagram: Install VPN"/>
+</p>
+
 Installing WireGuard should be same on both the Raspberry Pi (Debian) and Orange Pi (Ubuntu).   
 
 To install WireGuard, run:
@@ -68,6 +76,10 @@ sudo apt install WireGuard
 WireGuard must be installed on all the server nodes.
 
 #### Choosing VPN IP address range
+
+<p align="center">
+  <img src="./resources/diagram_VPN_ip_range.svg" alt="Diagram: VPN on LAN IP Range"/>
+</p>
 
 Devices within the VPN, will have a separate network interface to connect with each other, this separate network interface will have it's own IP address.   
 This IP address will not be exposed to the rest of the local network, it will only be used to connect to server nodes within the VPN.   
@@ -83,6 +95,10 @@ The block of IP addresses can be within the range below:
 I will be using the block of addresses in the `10.10.10.0/24` range, this is `10.10.10.0` to `10.10.10.254`.   
 
 #### Setup WireGuard VPN server 
+
+<p align="center">
+  <img src="./resources/diagram_VPN_server.svg" alt="Diagram: VPN Server"/>
+</p>
 
 Now that WireGuard has been installed and we have chosen an IP address range, the WireGuard server can be configured and set up.
 The WireGuard server will be the central node that all the other nodes communicate with.   
@@ -179,6 +195,10 @@ You should see `active (running)`, in the output (usually green).
 
 #### Setup WireGuard VPN client
 
+<p align="center">
+  <img src="./resources/diagram_VPN_server_and_client.svg" alt="Diagram: VPN Server and Client"/>
+</p>
+
 The setup to make WireGuard run as a client is similar to setting up WireGuard as a a server, the main difference is in the configuration file.
 
 ##### Generating a key pair
@@ -228,6 +248,10 @@ Endpoint = 192.168.2.100:51820
 #### Testing the VPN connection
 
 ### NFS
+
+<p align="center">
+  <img src="./resources/diagram_NFS_over_VPN.svg" alt="Diagram: NFS over VPN"/>
+</p>
 
 #### Install NFS
 
