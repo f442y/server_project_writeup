@@ -29,6 +29,8 @@
     - [Testing the VPN connection](#testing-the-vpn-connection)
   - [NFS](#nfs)
     - [Install NFS](#install-nfs)
+      - [NFS Server](#nfs-server)
+      - [NFS Client(s)](#nfs-clients)
     - [Configure NFS Server](#configure-nfs-server)
     - [Test mount NFS share](#test-mount-nfs-share)
   - [Docker](#docker)
@@ -196,7 +198,7 @@ You should see `active (running)`, in the output (usually green).
 #### Setup WireGuard VPN client
 
 <p align="center">
-  <img src="./resources/diagram_VPN_server_and_client.svg" alt="Diagram: VPN Server and Client"/>
+  <img src="./resources/diagram_VPN_client.svg" alt="Diagram: VPN Server and Client"/>
 </p>
 
 The setup to make WireGuard run as a client is similar to setting up WireGuard as a a server, the main difference is in the configuration file.
@@ -255,14 +257,50 @@ Endpoint = 192.168.2.100:51820
 
 #### Install NFS
 
+##### NFS Server
+
+<p align="center">
+  <img src="./resources/diagram_NFS_install_server.svg" alt="Diagram: NFS install server"/>
+</p>
+
+##### NFS Client(s)
+
+<p align="center">
+  <img src="./resources/diagram_NFS_install_client.svg" alt="Diagram: NFS install client"/>
+</p>
+
 #### Configure NFS Server
+
+<p align="center">
+  <img src="./resources/diagram_NFS_server_over_VPN.svg" alt="Diagram: NFS Server over VPN"/>
+</p>
 
 #### Test mount NFS share
 
+<p align="center">
+  <img src="./resources/diagram_NFS_test_mount_over_VPN.svg" alt="Diagram: NFS Client Mount over VPN "/>
+</p>
+
 ### Docker
+
+<p align="center">
+  <img src="./resources/diagram_docker.svg" alt="Diagram: Docker "/>
+</p>
 
 #### Install Docker
 
+<p align="center">
+  <img src="./resources/diagram_docker_install.svg" alt="Diagram: Docker Install"/>
+</p>
+
 #### Create Docker Swarm
 
+<p align="center">
+  <img src="./resources/diagram_docker_swarm.svg" alt="Diagram: Docker Swarm "/>
+</p>
+
 #### Deploy Portainer Across Docker Swarm
+
+<p align="center">
+  <img src="./resources/diagram_docker_swarm_deploy_portainer.svg" alt="Diagram: Docker Swarm Deploy Portainer "/>
+</p>
