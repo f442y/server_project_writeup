@@ -168,7 +168,7 @@ SaveConfig = true
 ```
 I will be setting my WireGuard server's IP address as `10.10.10.0`, so this is what I put as the `server_ip_address`.   
 As the allowed IP address range of the clients is between `10.10.10.0` to `10.10.10.255`, the `subnet_mask` is `24`.   
-The default port for WireGuard is `51820`, I will be leaving this as th default.   
+The default port for WireGuard is `51820`, I will be leaving this as the default.   
 
 Save this configuration file using `Ctrl + S` and exit using `Ctrl + X`.   
 
@@ -222,7 +222,7 @@ sudo nano /etc/wireguard/wg0.conf
 ```
 [Interface]
 PrivateKey = <base64_encoded_private_key_goes_here>
-Address = <server_ip_address>/<subnet_mask>
+Address = <client_ip_address>/<subnet_mask>
 
 [Peer]
 PublicKey = <base64_encoded_server_public_key_goes_here>
@@ -244,6 +244,14 @@ PublicKey = asdkgfhoghe______
 AllowedIPs = 10.10.10.0/24
 Endpoint = 192.168.2.100:51820
 ```
+
+I will be setting my Worker Node 1 IP address to `10.10.10.1`, so this is what I put as the `client_ip_address`
+As the allowed IP address range of the clients is between `10.10.10.0` to `10.10.10.255`, the `subnet_mask` is `24`.   
+The `AllowedIPs` is therefore set to `10.10.10.0/24`.   
+The `static IP address` of the server is `192.168.2.100`.   
+The listen port for the WireGuard server is set to  `51820` (default, set [above](#configuring-the-wireguard-server)).   
+
+
 
 ##### Starting up the WireGuard client(s)
 
