@@ -388,11 +388,19 @@ Any client added to the VPN should ping the server for this initial handshake.
   <img src="./resources/diagram_NFS_install_server.svg" alt="Diagram: NFS install server"/>
 </p>
 
+```
+sudo apt install nfs-kernel-server
+```
+
 ##### NFS Client(s)
 
 <p align="center">
   <img src="./resources/diagram_NFS_install_client.svg" alt="Diagram: NFS install client"/>
 </p>
+
+```
+sudo apt install nfs-common
+```
 
 #### Configure NFS Server
 
@@ -400,11 +408,35 @@ Any client added to the VPN should ping the server for this initial handshake.
   <img src="./resources/diagram_NFS_server_over_VPN.svg" alt="Diagram: NFS Server over VPN"/>
 </p>
 
+```
+/mnt/extdisk       10.10.10.0/24(rw,sync,no_subtree_check)
+```
+
+```
+sudo systemctl restart nfs-kernel-server
+```
+
 #### Test mount NFS share
 
 <p align="center">
   <img src="./resources/diagram_NFS_test_mount_over_VPN.svg" alt="Diagram: NFS Client Mount over VPN "/>
 </p>
+
+```
+sudo mkdir /nfs
+```
+
+```
+sudo mount 10.10.10.0:/mnt/extdisk /nfs
+```
+
+```
+sudo umount /nfs
+```
+
+```
+sudo rm -rf /nfs
+```
 
 ### Docker
 
