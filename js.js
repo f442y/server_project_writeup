@@ -121,7 +121,7 @@ fetchMD_ProcessAndAppendToStructure = async () => {
 
     structure.sections_map.get(active_section_id).html_element = html_element;
 
-    document.getElementById(`${active_section_id}_sidebar_download_icon`).src = `./web_assets/check-mark.png`
+    document.getElementById(`${active_section_id}_sidebar_download_icon`).src = `./web_assets/download-icon-green.png`
 }
 
 fetchMDfile = async (fixed_path_md, section_name) => {
@@ -172,7 +172,7 @@ initSidebarSections = (section_id, section_title) => {
     let summary_element_icon_img = document.createElement("img");
     summary_element_icon_img.id = `${section_id}_sidebar_download_icon`;
     summary_element_icon_img.src = `./web_assets/download-icon.png`;
-    summary_element_icon_img.classList.add("img-fluid", "w-half");
+    summary_element_icon_img.classList.add("img-fluid", "w-three-quarter");
     summary_element_icon.append(summary_element_icon_img);
     summary_element.append(summary_element_icon);
 
