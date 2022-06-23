@@ -62,7 +62,7 @@
         <div class="sidebar-overlay" onclick="halfmoon.toggleSidebar()"></div>
 
         <!-- Sidebar start -->
-        <div class="sidebar">
+        <div class="sidebar position-relative">
             <!-- Reference: https://www.gethalfmoon.com/docs/sidebar -->
             <div class="sidebar-divider"></div>
             <h5 class="sidebar-title">Sections</h5>
@@ -71,11 +71,35 @@
             <div id="sidebar-sections" class="collapse-group mw-full">
                 <!-- w-500 = width: 50rem (500px), mw-full = max-width: 100% -->
             </div>
+            <div id="custom-footer" class="custom-footer position-absolute bottom-0 content">
+                <div class="container-fluid mt-20">
+                    <div class="row">
+                        <div class="m-auto">
+                            <h4 class="content-title font-size-16 mb-10">
+                                Generated with <a target="_blank" href="https://showdownjs.com/">showdown</a>
+                            </h4>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="m-auto">
+                            <h4 class="content-title font-size-16 mb-10">
+                                Beautified with <a target="_blank" href="https://www.gethalfmoon.com/">halfmoon</a>
+                            </h4>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="text-muted m-auto">
+                            <a target="_blank" href="https://github.com/f442y/server_project_writeup">Github</a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
         </div>
         <!-- Sidebar end -->
 
         <!-- Content wrapper start -->
-        <div class="content-wrapper">
+        <div id="content-wrapper d-flex" class="content-wrapper">
             <!--
           Add your page's main content here
           Examples:
@@ -85,6 +109,7 @@
             <div id="content-fluid-wrapper" class="container-fluid">
                 <div id="content" class="content"></div>
             </div>
+            
         </div>
         <!-- Content wrapper end -->
 
