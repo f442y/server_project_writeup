@@ -380,13 +380,25 @@ Any client added to the VPN should ping the server for this initial handshake.
   <img src="./resources/diagram_NFS_over_VPN.svg" alt="Diagram: NFS over VPN"/>
 </p>
 
+I will be using NFS (Network File System), for the persistent network storage across the server nodes.   
+NFS allows us to mount a directory from a host server node onto a client server node.   
+I will have an NFS server running on the manager node serving a directory to all nodes.   
+The shared directory will be on the USB mounted SSD on the manager server node.   
+
+NFS is very performant and highly optimised to run on the linux kernel.   
+
 #### Install NFS
+
+NFS is not installed by default on any of our chosen operating systems.   
+Therefore, it must be installed via `apt` onto the server nodes.
 
 ##### NFS Server
 
 <p align="center">
   <img src="./resources/diagram_NFS_install_server.svg" alt="Diagram: NFS install server"/>
 </p>
+
+On the server node where the NFS server will be hosted (Manager Node), run the following command to install the required packages for the NFS server:
 
 ```
 sudo apt install nfs-kernel-server
@@ -398,9 +410,12 @@ sudo apt install nfs-kernel-server
   <img src="./resources/diagram_NFS_install_client.svg" alt="Diagram: NFS install client"/>
 </p>
 
+On the client nodes where the directory will be mounted and not served (Worker Nodes), run the following command to install the packages to mount an NFS shared directory:
+
 ```
 sudo apt install nfs-common
 ```
+This installs less packages than the NFS server.
 
 #### Configure NFS Server
 
@@ -408,13 +423,54 @@ sudo apt install nfs-common
   <img src="./resources/diagram_NFS_server_over_VPN.svg" alt="Diagram: NFS Server over VPN"/>
 </p>
 
+The NFS server is configured by a config file, in the `/etc` directory.   
+When the NFS server packages were [installed](#nfs-server), a file should have been automatically created in `/etc` called `exports`.   
+In this file we enter the configuration for the NFS server.
+
+To open the file, run:
+```
+sudo nano /etc/exports
+```
+The file should have some commented examples of configuration entries.   
+
+We will add our own entry to the file in the following format.
+
+```
+<directory_to_share>        <ip_address_to_expose_over>/<subnet_mask_of_allowed_connections>(<share_options...>)
+```
+
+The `<directory_to_share>` is the directory that will be shared by the NFS server.   
+The `<ip_address_range_to_expose_over>` is the ip address of the NFS server node that the NFS server will be shared to.   
+The `<share_options...>` are the configuration options of this particular share.   
+
+**By default NFS shares are not encrypted**, therefore, we will be exposing the NFS share over the VPN which encrypts all traffic automatically.   
+To do this, set the `<ip_address_to_expose_over>` to the  `ip_address` of the VPN server (`wg0`), on the server node. To limit the allowed connections to only the VPN client servers, set the `<subnet_mask_of_allowed_connections>` to the `subnet_mask` of the VPN `ip_adress` range.   
+
+There are [many `<share_options...>`](https://www.thegeekdiary.com/understanding-the-etc-exports-file/) for the NFS server, I will be using the default options (`rw,sync,no_subtree_check`).
+
+For my NFS server, I add the line:
+
 ```
 /mnt/extdisk       10.10.10.0/24(rw,sync,no_subtree_check)
 ```
 
+`/mnt/extdisk`, this is the directory of my mounted SSD.   
+`10.10.10.0/24`, my [chosen IP address range](#choosing-vpn-ip-address-range) for the VPN.   
+
+After entering the configuration, save the file `Ctrl + S` and exit the editor `Ctrl + X`.   
+
+With the new configuration added, the NFS server needs to be restarted to run the new configuration.   
+To restart the NFS server, run:
+
 ```
 sudo systemctl restart nfs-kernel-server
 ```
+
+Check if the NFS server successfully started with the new configuration by running:
+```
+sudo systemctl status nfs-kernel-server
+```
+The status should be `active`.
 
 #### Test mount NFS share
 
@@ -422,17 +478,46 @@ sudo systemctl restart nfs-kernel-server
   <img src="./resources/diagram_NFS_test_mount_over_VPN.svg" alt="Diagram: NFS Client Mount over VPN "/>
 </p>
 
+The NFS share should be test mounted on an NFS client (Worker Node), to ensure that the NFS share can be successfully mounted.   
+
+On the client node, create a new directory where the NFS share will be mounted.
+
 ```
 sudo mkdir /nfs
 ```
+
+Attempt to mount the NFS share on the client.
+
+```
+sudo mount <ip_address_of_nfs_server>:<shared_directory_on_server> <directory_where_share_will_be_mounted>
+```
+
+For my configuration I run the following command:
 
 ```
 sudo mount 10.10.10.0:/mnt/extdisk /nfs
 ```
 
+`10.10.10.0`, this is the `ip_address` of the NFS server.   
+`/mnt/extdisk`, this is the directory shared by the NFS server.   
+`/nfs`, this is the new directory created where the NFS share is to be mounted.
+
+To see the listed mount, run `df -h`, the mounted share should be listed.   
+
+<p align="center">
+  <img src="./resources/mounted_nfs_share.png" alt="NFS mounted share, shown in df -h"/>
+</p>
+
+The mount can also be tested by creating a new file (`touch newfile.txt`) or directory (`mkdir newdir`) in the mounted share within `/nfs` and then viewing the new directory and/or file in the `/mnt/extdisk` directory in the NFS server node.
+
+As this is only a test mount, the mounted directory should be unmounted.   
+To unmount, run:   
+
 ```
 sudo umount /nfs
 ```
+
+The folder for the mount should also be cleaned.
 
 ```
 sudo rm -rf /nfs
