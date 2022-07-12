@@ -36,7 +36,11 @@
     - [Test mount NFS share](#test-mount-nfs-share)
   - [Docker](#docker)
     - [Install Docker](#install-docker)
+      - [Install Docker on Raspberry Pi OS (Debian)](#install-docker-on-raspberry-pi-os-debian)
+      - [Install Docker on Orange Pi (Ubuntu)](#install-docker-on-orange-pi-ubuntu)
     - [Create Docker Swarm](#create-docker-swarm)
+      - [Create Swarm Manager](#create-swarm-manager)
+      - [Add Swarm Workers](#add-swarm-workers)
     - [Deploy Portainer Across Docker Swarm](#deploy-portainer-across-docker-swarm)
 
 <!-- TOC:end -->
@@ -529,16 +533,210 @@ sudo rm -rf /nfs
   <img src="./resources/diagram_docker.svg" alt="Diagram: Docker "/>
 </p>
 
+Applications on the servers will be containerized and run on docker for easier management.   
+Docker Swarm will be use to orchestrate across the different hosts.   
+Portainer will be the first container on all the hosts, it will be deployed across the swarm to manage docker across all the hosts.
+
 #### Install Docker
 
 <p align="center">
   <img src="./resources/diagram_docker_install.svg" alt="Diagram: Docker Install"/>
 </p>
 
+Docker must be ***installed on all the server nodes***, the steps are similar on both the Raspberry Pi (Debian) and Orange Pi (Ubuntu).
+There are many alternative guides available online to install docker on [Debian](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-debian-10) and [Ubuntu](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-22-04).
+
+##### Install Docker on Raspberry Pi OS (Debian)
+
+First update the list of repositories and packages using:   
+```
+sudo apt update
+```
+
+We will be installing using the latest docker repository as the repository in `apt` may install an older version of docker.   
+Therefore we need to add the docker repository to `apt`.   
+
+Install some prerequisite packages to securely add the repository.   
+```
+sudo apt install apt-transport-https ca-certificates curl gnupg2 software-properties-common
+```
+
+Next add the GPG key for the official Docker repository.   
+```
+curl -fsSL https://download.docker.com/linux/debian/gpg | sudo apt-key add -
+```
+
+Now the docker repository can be added.   
+```
+sudo add-apt-repository "deb [arch=$(dpkg --print-architecture)] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
+```
+
+Update the list of repositories and packages to allow the new repository sources to be recognized.   
+```
+sudo apt update
+```
+
+Docker can now be installed using:
+```
+sudo apt install docker-ce
+```
+
+This should install multiple packages relevant to docker.   
+
+After the install finished, check if docker is running using:
+```
+sudo systemctl status docker
+```
+
+The output should show docker as `active` (in green).
+
+<p align="center">
+  <img src="./resources/docker_running_systemctl.png" alt="Docker running in systemctl "/>
+</p>
+
+> Use the `q` key to exit out of the output back into the terminal.
+
+We can also see if docker is installed by running the command `docker --version` in the terminal and seeing if there is an output.   
+
+Tunning a `docker` command generally requires `sudo` before the command, however, on Raspberry Pi OS, the `sudo` command is not often needed due to the `pi` user having elevated privileges.  
+
+We will however still add the `pi` user to the auto generated docker group, this is how the `docker` command is run without appending `sudo` on Debian operating systems.   
+
+To add the current user to the `docker` group, run   
+```
+sudo usermod -aG docker ${USER}
+```
+
+To apply the new settings, log out and back in to the server node, or run the following command.   
+```
+su - ${USER}
+```
+
+##### Install Docker on Orange Pi (Ubuntu)
+
+> The commands to install on Ubuntu are mostly similar to Debian. However there are some differences.   
+
+First update the list of repositories and packages using:   
+```
+sudo apt update
+```
+
+Install some prerequisite packages to securely add the repository.   
+```
+sudo apt install apt-transport-https ca-certificates curl software-properties-common
+```
+
+Next add the GPG key for the official Docker repository.   
+```
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+```
+
+Now the docker repository can be added.   
+```
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+```
+
+Update the list of repositories and packages to allow the new repository sources to be recognized.   
+```
+sudo apt update
+```
+
+Docker can now be installed using:
+```
+sudo apt install docker-ce
+```
+
+This should install multiple packages relevant to docker.   
+
+After the install finished, check if docker is running using:
+```
+sudo systemctl status docker
+```
+
+The output should show docker as `active` (in green), as above in when [installing docker on Debian](#install-docker-on-raspberry-pi-os-debian).  
+
+We can also see if docker is installed by running the command `docker --version` in the terminal and seeing if there is an output.   
+
+Running the docker command on Ubuntu on the `orangepi` will require `sudo`.   
+The steps to add the `orangepi` user to the docker group are the same as [Debian](#install-docker-on-raspberry-pi-os-debian).   
+
+To add the current user to the `docker` group, run   
+```
+sudo usermod -aG docker ${USER}
+```
+
+To apply the new settings, log out and back in to the server node, or run the following command.   
+```
+su - ${USER}
+```
+
 #### Create Docker Swarm
 
 <p align="center">
   <img src="./resources/diagram_docker_swarm.svg" alt="Diagram: Docker Swarm "/>
+</p>
+
+Docker comes with Docker swarm built in so there is no need for further installation.   
+
+The swarm will run over local network (LAN) and create its own network interface, this is called the `ingress` network, it is used for docker communication between installations of docker on all the server nodes.   
+As the `ingress` network is encrypted it will remain running on the LAN instead of over the VPN.   
+
+The swarm requires at least one manager node to manage all the docker engines on the server nodes, we will be using the Raspberry Pi as the manager node as this is the node running the [VPN server](#configuring-the-wireguard-server) and [NFS server](#configure-nfs-server).   
+
+##### Create Swarm Manager
+To create the swarm manager run the following command on the manager server node.   
+```
+docker swarm init --advertise-addr <lan_ip_address>
+```
+The `<lan_ip_address>` is the `ip` address of the server node on the `eth0` interface. Use `ifconfig` to find out the `ip` address. 
+I would run the command:
+
+```
+docker swarm init --advertise-addr 192.168.2.100
+```
+
+`192.168.2.100` is the static `ip`address I set on the Raspberry Pi on the `eth0` interface.   
+
+Running the command should initialize the swarm.   
+
+<p align="center">
+  <img src="./resources/docker_swarm_init.png" alt="Docker swarm init"/>
+</p>
+
+The output should give a command to add workers to the swarm. (To be run on the worker nodes)   
+The command contains unique a key to securely join the swarm.   
+
+The current nodes in the swarm can be listed using the following command (only on a manager node).   
+```
+docker node ls
+```
+
+There should only be one manager node in the swarm.   
+
+<p align="center">
+  <img src="./resources/docker_swarm_init_node_list.png" alt="Docker swarm init node list"/>
+</p>
+
+##### Add Swarm Workers
+Adding a worker node to the swarm is as simple as running the command output by the manager node.   
+The command is output when the [swarm is created](#create-docker-swarm).   
+
+The command to join the swarm as a worker can be output again using the following command.   
+(Run on the manager node)
+```
+docker swarm join-token worker
+```
+
+Run the command on every server node to be added as a worker.   
+
+<p align="center">
+  <img src="./resources/docker_swarm_worker_join.png" alt="Docker swarm add worker"/>
+</p>
+
+When all server nodes have been added, run `docker node ls` on the manager node to see all the nodes listed.   
+
+<p align="center">
+  <img src="./resources/docker_swarm_all_node_list.png" alt="Docker swarm all nodes list"/>
 </p>
 
 #### Deploy Portainer Across Docker Swarm
