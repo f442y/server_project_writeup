@@ -797,9 +797,100 @@ When all server nodes have been added, run `docker node ls` on the manager node 
 
 [Portainer](https://www.portainer.io/) allows us to manage all the docker instances in our swarm, we will have access to a web browser based GUI (Graphical User Interface) to deploy and configure containers across all nodes in the swarm.
 
+Portainer itself runs as a stack of services across the swarm.   
+This means it is installed as docker containers on our servers that auto scale and deploy across all server nodes in the swarm.   
+There are two services:
+A Portainer service which runs a single container on a single manager node.
+A Portainer Agent service which runs a single container on every manager and worker node.   
+
+Both of these services are scaled and deployed automatically when the stack is deployed.   
+
+To deploy the stack there are a few preliminary steps.   
+
+We will be deploying our Portainer stack ***with persistent network stored data***.   
+This means that the data Portainer save data (configurations, user logins .etc) will be persisted to a network shared location.   
+There main advantage of this configuration is that the save data is still available even if the container is redeployed.   
+Also, if the swarm should grow and more manager nodes are added, the save data is available across all server nodes in the the network file share.   
+So if the Portainer service deploys the container on another manager node, Portainer save data is still available if the network share is still accessible.   
+
+Deploying the Portainer stack with the persistent network share which is available only through the VPN, is also a way to affirm the installations of the VPN service, the NFS service and Docker.
+
 ##### Create Network Share Directory for Portainer Data
+The USB SSD mounted to the manager node is [shared via NFS](#configure-nfs-server).   
+This is where the Portainer save data will be persisted.   
+
+Change directories into the mounted drive. My drive is mounted in the directory `mnt/extdisk`.
+```
+cd /mnt/extdisk
+```
+
+As other container save data may also be persisted, we will create a directory specifically for the Portainer save data.   
+I will create the directory `./config/portainer/portainer_shared_data/`
+```
+sudo mkdir -p ./config/portainer/portainer_shared_data
+```
+This creates (in `/mnt/extdisk`):
+```
+extdisk/
+├─ config/
+│  ├─ portainer/
+│  │  ├─ portainer_shared_data/
+```
+
+The `config/` directory will contain configuration data for the server.
+
+Within the `config/` directory, is the `portainer/` directory, this will contain the configuration data for Portainer.
+
+Withing the `portainer/` directory, is the `portainer_shared_data/` directory, this is where the Portainer save data will be persisted.   
+
+We now have a directory to persist the portainer save data.   
+
+However, we cannot actually write to this directory via NFS.   
+This is to because of the permissions set on the directory (`/mnt/extdisk/config/portainer/portainer_shared_data/`).   
+
+The permissions of the directory can be viewed using the `ls -l` command.   
+```
+ls -l /mnt/extdisk/config/portainer
+```
+
+This should output the information of files and directories within the `/mnt/extdisk/config/portainer/` directory.   
+
+As the only file/directory within `/mnt/extdisk/config/portainer/` is `portainer_shared_data/` the output should be as shown below.
+
+<p align="center">
+  <img src="./resources/directory_info_portainer_shared_data_root_root.png" alt="directory info of /mnt/extdisk/config/portainer/ using ls -l showing root root"/>
+</p>
+
+The two relevant parts of this out put are "`root root`".   
+These show the user and group of the directory, currently the `portainer_shared_data/` directory belongs to the user `root` and the group `root`.   
+This means this directory is only accessible to the `root` user and `root` group.   
+
+The Portainer docker container will not be accessing this directory as `root` so there will be a permission error when saving or accessing the files.
+
+A method of fixing this could be to add "`no_root_squash`" to the share options in when [configuring the NFS server](#configure-nfs-server).   
+However, this is not recommended as it allows the NFS clients to access all files and directories in the shared directory, even those with `root` permissions.   
+
+Instead, we will change the user and group of the `portainer_shared_data/` directory so that the directory can be accessed by docker containers.   
+Changing the `user` to `nobody` and the `group` to `nogroup` should allow docker container access over NFS.   
+
+To make this change run the following command:
+```
+sudo chown -R nobody:nogroup /mnt/extdisk/config/portainer/portainer_shared_data/
+```
+
+> The `-R` flag runs the command recursively over the directory so all the sub-directories and files also have their permissions changed.   
+
+Running `ls -l` should show `nobody` and `nogroup`.
+
+<p align="center">
+  <img src="./resources/directory_info_portainer_shared_data_nobody_nogroup.png" alt="directory info of /mnt/extdisk/config/portainer/ using ls -l showing nobody nogroup"/>
+</p>
+
+An NFS shared directory is now ready for Portainer container save data to be persisted into.
 
 ##### Download Portainer Stack YAML File
+
+[this](https://docs.portainer.io/start/install/server/swarm/linux)
 
 ##### Edit Portainer Stack YAML Configuration
 
