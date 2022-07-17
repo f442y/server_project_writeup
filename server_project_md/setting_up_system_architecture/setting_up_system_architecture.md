@@ -36,12 +36,19 @@
     - [Test mount NFS share](#test-mount-nfs-share)
   - [Docker](#docker)
     - [Install Docker](#install-docker)
-      - [Install Docker on Raspberry Pi OS (Debian)](#install-docker-on-raspberry-pi-os-debian)
-      - [Install Docker on Orange Pi (Ubuntu)](#install-docker-on-orange-pi-ubuntu)
+      - [Install Docker Using an Automated Script](#install-docker-using-an-automated-script)
+      - [Manually Install Docker on Raspberry Pi OS (Debian)](#manually-install-docker-on-raspberry-pi-os-debian)
+      - [Manually Install Docker on Orange Pi (Ubuntu)](#manually-install-docker-on-orange-pi-ubuntu)
+      - [Adding Current User to Docker Group](#adding-current-user-to-docker-group)
     - [Create Docker Swarm](#create-docker-swarm)
       - [Create Swarm Manager](#create-swarm-manager)
       - [Add Swarm Workers](#add-swarm-workers)
     - [Deploy Portainer Across Docker Swarm](#deploy-portainer-across-docker-swarm)
+      - [Create Network Share Directory for Portainer Data](#create-network-share-directory-for-portainer-data)
+      - [Download Portainer Stack YAML File](#download-portainer-stack-yaml-file)
+      - [Edit Portainer Stack YAML Configuration](#edit-portainer-stack-yaml-configuration)
+      - [Deploy Portainer Stack](#deploy-portainer-stack)
+      - [Access Portainer GUI](#access-portainer-gui)
 
 <!-- TOC:end -->
 
@@ -546,7 +553,60 @@ Portainer will be the first container on all the hosts, it will be deployed acro
 Docker must be ***installed on all the server nodes***, the steps are similar on both the Raspberry Pi (Debian) and Orange Pi (Ubuntu).
 There are many alternative guides available online to install docker on [Debian](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-debian-10) and [Ubuntu](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-22-04).
 
-##### Install Docker on Raspberry Pi OS (Debian)
+##### Install Docker Using an Automated Script
+
+Docker publish a script that automatically installs Docker on linux systems.   
+This is the quickest way to install Docker and all its dependencies.   
+This install script can be run on both the Raspberry Pi and Orange Pi. 
+
+First download the script.   
+We can use `curl` to download the script, if `curl` is not already installed on the system, it can be installed by running:   
+```
+sudo apt install curl
+```
+
+Download the install script.   
+```
+curl -fsSL https://get.docker.com -o get-docker.sh
+```
+
+This should download a script file and name it "`get-docker.sh`".   
+
+> The script file can be viewed using `nano get-docker.sh`.
+> There shouldn't be any changes necessary to the script file.
+> Exit the `nano` editor using `Ctrl + X`.
+
+Run the script.   
+```
+sudo sh get-docker.sh
+```
+Run the script with `sudo` to ensure the script does not run into any permission errors.   
+
+When the install has finished, Docker should be installed and running.
+
+We can check if docker is running using:
+```
+sudo systemctl status docker
+```
+
+The output should show docker as `active` (in green).
+
+<p align="center">
+  <img src="./resources/docker_running_systemctl.png" alt="Docker running in systemctl "/>
+</p>
+
+> Use the `q` key to exit out of the output back into the terminal.
+
+We can also see if docker is installed by running the command `sudo docker --version` in the terminal and seeing if there is an output.   
+
+See how to [add a user to the docker group](#adding-current-user-to-docker-group), this allows us to run `docker` without `sudo`.
+
+The script file can now be cleaned.   
+```
+rm get-docker.sh
+```
+
+##### Manually Install Docker on Raspberry Pi OS (Debian)
 
 First update the list of repositories and packages using:   
 ```
@@ -588,31 +648,17 @@ After the install finished, check if docker is running using:
 sudo systemctl status docker
 ```
 
-The output should show docker as `active` (in green).
+The output should show docker as `active` (in green), as above in when [installing docker using an automated script](#install-docker-using-automated-script).  
 
-<p align="center">
-  <img src="./resources/docker_running_systemctl.png" alt="Docker running in systemctl "/>
-</p>
+We can also see if docker is installed by running the command `sudo docker --version` in the terminal and seeing if there is an output.    
 
-> Use the `q` key to exit out of the output back into the terminal.
-
-We can also see if docker is installed by running the command `docker --version` in the terminal and seeing if there is an output.   
-
-Tunning a `docker` command generally requires `sudo` before the command, however, on Raspberry Pi OS, the `sudo` command is not often needed due to the `pi` user having elevated privileges.  
+Running a `docker` command generally requires `sudo` before the command, however, on Raspberry Pi OS, the `sudo` command is not often needed due to the `pi` user having elevated privileges.  
 
 We will however still add the `pi` user to the auto generated docker group, this is how the `docker` command is run without appending `sudo` on Debian operating systems.   
 
-To add the current user to the `docker` group, run   
-```
-sudo usermod -aG docker ${USER}
-```
+See how to [add a user to the docker group](#adding-current-user-to-docker-group), this allows us to run `docker` without `sudo`.
 
-To apply the new settings, log out and back in to the server node, or run the following command.   
-```
-su - ${USER}
-```
-
-##### Install Docker on Orange Pi (Ubuntu)
+##### Manually Install Docker on Orange Pi (Ubuntu)
 
 > The commands to install on Ubuntu are mostly similar to Debian. However there are some differences.   
 
@@ -653,12 +699,16 @@ After the install finished, check if docker is running using:
 sudo systemctl status docker
 ```
 
-The output should show docker as `active` (in green), as above in when [installing docker on Debian](#install-docker-on-raspberry-pi-os-debian).  
+The output should show docker as `active` (in green), as above in when [installing docker using an automated script](#install-docker-using-automated-script).  
 
-We can also see if docker is installed by running the command `docker --version` in the terminal and seeing if there is an output.   
+We can also see if docker is installed by running the command `sudo docker --version` in the terminal and seeing if there is an output.   
 
 Running the docker command on Ubuntu on the `orangepi` will require `sudo`.   
 The steps to add the `orangepi` user to the docker group are the same as [Debian](#install-docker-on-raspberry-pi-os-debian).   
+
+See how to [add a user to the docker group](#adding-current-user-to-docker-group), this allows us to run `docker` without `sudo`.
+
+##### Adding Current User to Docker Group
 
 To add the current user to the `docker` group, run   
 ```
@@ -744,3 +794,15 @@ When all server nodes have been added, run `docker node ls` on the manager node 
 <p align="center">
   <img src="./resources/diagram_docker_swarm_deploy_portainer.svg" alt="Diagram: Docker Swarm Deploy Portainer "/>
 </p>
+
+[Portainer](https://www.portainer.io/) allows us to manage all the docker instances in our swarm, we will have access to a web browser based GUI (Graphical User Interface) to deploy and configure containers across all nodes in the swarm.
+
+##### Create Network Share Directory for Portainer Data
+
+##### Download Portainer Stack YAML File
+
+##### Edit Portainer Stack YAML Configuration
+
+##### Deploy Portainer Stack
+
+##### Access Portainer GUI
