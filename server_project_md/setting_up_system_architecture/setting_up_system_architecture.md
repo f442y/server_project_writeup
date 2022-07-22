@@ -797,6 +797,10 @@ When all server nodes have been added, run `docker node ls` on the manager node 
 
 [Portainer](https://www.portainer.io/) allows us to manage all the docker instances in our swarm, we will have access to a web browser based GUI (Graphical User Interface) to deploy and configure containers across all nodes in the swarm.
 
+<p align="center">
+  <img src="./resources/portainer_gui_gif.gif" alt="Portainer GUI showcase gif"/>
+</p>
+
 Portainer itself runs as a stack of services across the swarm.   
 This means it is installed as docker containers on our servers that auto scale and deploy across all server nodes in the swarm.   
 There are two services:
@@ -890,10 +894,212 @@ An NFS shared directory is now ready for Portainer container save data to be per
 
 ##### Download Portainer Stack YAML File
 
-[this](https://docs.portainer.io/start/install/server/swarm/linux)
+The [portainer website](https://www.portainer.io/) shows instructions on how to install portainer on many systems.   
+
+<p align="center">
+  <img src="./resources/portainer_io_get_download_script_gif.gif" alt="Portainer.io website path to download config yaml"/>
+</p>
+
+Download the config YAML to deploy the community version of portainer, the script can be found [here](https://docs.portainer.io/start/install/server/swarm/linux), or by following the video above.
+
+> Be sure to select the ***community edition*** of Portainer.
+
+The download command should be similar to the command below.   
+```
+curl -L https://downloads.portainer.io/ce2-14/portainer-agent-stack.yml -o portainer-agent-stack.yml
+```
+This command downloads the YAML (`.yml`) file and ensures it is named `portainer-agent-stack.yml`.
+
+> Get the latest version of Portainer using the latest version of the script from the [website](https://www.portainer.io/)
+
+To download the config file run the command given on the website on manager node.    
+
+I will be downloading the config to the specified Portainer config directory set up [previously](#create-network-share-directory-for-portainer-data).   
+```
+/mnt/extdisk/config/portainer/
+```
+
+We can change directory to the location (`cd /mnt/extdisk/config/portainer/`) and then run the download `curl` command.   
+Use `sudo` to download to this directory as it is a `root` directory.   
+
+If already downloaded, we can move the config file to the correct location using `mv`.
+```
+sudo mv portainer-agent-stack.yml /mnt/extdisk/config/portainer/
+```
+`sudo` is required as the destination directory is `root`.
 
 ##### Edit Portainer Stack YAML Configuration
 
+Before deploying the configuration we must first edit the configuration file (`portainer-agent-stack.yml`).   
+This is to add the location to persist the Portainer save data.
+
+Open the file with the `nano` editor.
+```
+sudo nano portainer-agent-stack.yml
+```
+
+The file should start with `version` and then have the services below.
+
+<p align="center">
+  <img src="./resources/portainer_agent_stack_yml_file.png" alt="nano portainer-agent-stack.yml file"/>
+</p>
+
+> `portainer-agent-stack.yml` is in the format of a `docker-compose` file.
+
+At the bottom, in `volumes`, there should be an empty entry called `portainer_data`.   
+This is where we will add the network directory configuration of the Portainer save data.   
+
+The configuration will be as follows.   
+
+***Indentations (spacing) is strict in YAML, so the indent spaces should be exactly as shown.***
+
+```
+volumes:
+  portainer_data:
+    driver: local
+    driver_opts:
+        type: nfs4
+        o: addr=<ip_address_of_nfs_share_server>,rw
+        device: ":<directory_where_portainer_save_data_will_persisted>"
+```
+
+My NFS share `ip` address is `10.10.10.0`. (Manager Node VPN address. [VPN setup](#setup-wireguard-vpn-server), [NFS setup](#configure-nfs-server))   
+I will be saving the Portainer save data to `/mnt/extdisk/config/portainer`.   
+
+Therefore, I would have the following configuration.   
+```
+volumes:
+  portainer_data:
+    driver: local
+    driver_opts:
+        type: nfs4
+        o: addr=10.10.10.0,rw
+        device: ":/mnt/extdisk/config/portainer/portainer_shared_data"
+```
+
+> Be sure to use the correct number of spaces for indentation in the `.yml` file.
+
+<p align="center">
+  <img src="./resources/portainer_agent_stack_yml_file_nfs_volume_added.png" alt="portainer-agent-stack.yml file NFS volume config"/>
+</p>
+
+Save the file `Ctrl + S` and exit the editor `Ctrl + X`.
+
 ##### Deploy Portainer Stack
 
+Now the Portainer stack can be deployed.    
+The command for deploying the stack is given in the online documentation for deploying portainer below the `curl` command.   
+
+```
+docker stack deploy -c portainer-agent-stack.yml portainer
+```
+
+The variables of this command are `portainer-agent-stack.yml` (the config file) and `portainer` the stack name.
+```
+docker stack deploy -c <docker_compose_stack_configuration_file> <stack_name>
+```
+
+> Ensure you are in the directory of the `portainer-agent-stack.yml` file.
+
+<p align="center">
+  <img src="./resources/portainer_deploy_stack_command.png" alt="Deploy Portainer stack"/>
+</p>
+
+Both the `portainer_agent` and `portainer_portainer` services will be created, as well as the `portainer_agent_network`.   
+
+To see the services run the following Docker command (Manager node only):
+```
+docker service ls
+```
+
+You should see both services with the correct number of `REPLICAS` (container instances).
+
+> If running for the first time, allow some time for all the nodes in the stack/swarm to download the docker images to be deployed.
+
+I have one Manager node and two server nodes.
+
+<p align="center">
+  <img src="./resources/portainer_services_ls.png" alt="Portainer services listed"/>
+</p>
+
+For the `portainer_agent` service, the number of `REPLICAS` should be the total number of nodes in the swarm. (Managers and Workers).   
+For the `portainer_portainer` service, the number of `REPLICAS` should be the total number of Managers in the swarm.   
+
+The `tasks` (containers in a service) can be viewed using the following Docker command (Manager node only):   
+```
+docker service ps <service_name>
+```
+
+<p align="center">
+  <img src="./resources/portainer_services_ps.png" alt="Portainer tasks of services"/>
+</p>
+
+In `/mnt/extdisk/config/portainer/portainer_shared_data/` new files and directories should be saved.   
+These are the Portainer save data files and directories.   
+Running `ls -l` should show they belong to `nobody` and `nogroup` as they are created by deploying the docker container.   
+
+<p align="center">
+  <img src="./resources/portainer_persistent_save_data_files.png" alt="Portainer persistent save data files and directories"/>
+</p>
+
+The stack can be removed using the following Docker command (Manager node only):   
+```
+docker stack rm <stack_name>
+```
+
+For a stack named `portainer`.   
+```
+docker stack rm portainer
+```
+
 ##### Access Portainer GUI
+
+Portainer should now be running.   
+The portainer web GUI should be accessible via any node running the `portainer_agent` container.   
+As this is all nodes, the Portainer GUI should be accessible using the `ip` address of all the nodes.   
+
+By default portainer serves the web GUI on port `9000` and `9443`.
+Port `9000` serves a `http` (non TLS encrypted GUI) web GUI.   
+Port `9443` serves a `https` (TLS encrypted GUI; self signed certificate) web GUI.   
+
+Therefore to access Portainer, enter a corresponding `URL` into a browser.   
+
+> You must be connected to the same local network as the server node to access Portainer's web GUI.
+
+The `URL` will be as follows.   
+```
+<http_or_https>://<server_node_ip_address>:<portainer_gui_port>
+```
+
+We will access Portainer via the Manager node, using the `9443` port.   
+
+As my Manager node has a static `ip` address of `192.168.2.100`, the `URL` for accessing Portianer is:
+```
+https://192.168.2.100:9443
+```
+
+I use `https` as port 9443 is TLS encrypted. Portainer responds with a message to use `https`, if we use `http`.
+
+<p align="center">
+  <img src="./resources/portainer_gui_access_http_9443.png" alt="Portainer GUI access http with port 9443"/>
+</p>
+
+> I can also use `https://srv-node0-rpi4:9443`, as I have `srv-node0-rpi4` set up as the `hostname` and local `DNS` domain name.
+
+Accessing Portainer with `https` on a modern browser will likely give a security warning, this is due to the certificate being self-signed, the browser cannot check legitimacy of the vendor that signed the certificate.   
+This is expected, and we can continue to the site.   
+
+TLS/SSL certificates are used for encrypting transmitted data and sometimes also verifying the legitimacy of a website source.   
+As we are accessing the a local `ip` address, we can verify the source is legitimate, so we will only be using TLS to encrypt data sent over the local network, the warning can be skipped.   
+
+<p align="center">
+  <img src="./resources/portainer_gui_access_cert_warning.png" alt="Portainer GUI access TLS cert warning"/>
+</p>
+
+Finally, Portainer will load an interface to get started by creating a user.   
+
+<p align="center">
+  <img src="./resources/portainer_gui_access_create_user.png" alt="Portainer GUI access create user"/>
+</p>
+
+When logged in the Portainer Dashboard should load.
