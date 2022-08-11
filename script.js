@@ -1,5 +1,6 @@
 // ************************ Initialize static variables and objects ***********
 
+// (State)
 // Page contents object
 const sections = [
     ["intro_page", "Intro"],
